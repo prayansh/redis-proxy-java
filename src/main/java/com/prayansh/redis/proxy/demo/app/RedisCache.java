@@ -31,14 +31,14 @@ public class RedisCache {
 
     private final long timeToExpire;
     private final int capacity;
-    private Map<String, CacheItem> cache;
-    private LRUDoublyLinkedList<CacheItem> lruList;
+    private Map<String, LRUQueue<CacheItem>.Node> cache;
+    private LRUQueue<CacheItem> lruList;
 
     public RedisCache(long timeToExpireInMilliseconds, int capacity) {
         cache = new HashMap<>();
         this.timeToExpire = timeToExpireInMilliseconds;
         this.capacity = capacity;
-        lruList = new LRUDoublyLinkedList<>();
+        lruList = new LRUQueue<>();
     }
 
     public RedisCache() {
@@ -46,27 +46,29 @@ public class RedisCache {
     }
 
     public String retrieve(String key) {
-        CacheItem item = cache.get(key);
+        LRUQueue<CacheItem>.Node item = cache.get(key);
         String returnVal = null;
         if (item != null) { // Is in cache
-            if (item.isValid(timeToExpire)) { // value has not expired
-                returnVal = item.val;
-                item.reset();
-                lruList.moveToFront(item);
+            if (item.obj.isValid(timeToExpire)) { // value has not expired
+                returnVal = item.obj.val;
+                item.obj.reset();
+                LRUQueue<CacheItem>.Node updatedNode = lruList.moveToFront(item);
+                cache.put(key, updatedNode);
             } else { // value has expired, remove from cache
-                cache.remove(key);
                 lruList.removeNode(item);
+                cache.remove(key);
             }
         }
         return returnVal; // values not in cache, or has expired
     }
 
     public void add(String key, String value) {
-        CacheItem cacheItem = cache.get(key);
+        LRUQueue<CacheItem>.Node cacheItem = cache.get(key);
         if (cacheItem != null) { // already in cache, update value
-            cacheItem.val = value;
-            cacheItem.reset();
-            lruList.moveToFront(cacheItem);
+            cacheItem.obj.val = value;
+            cacheItem.obj.reset();
+            LRUQueue<CacheItem>.Node updatedNode = lruList.moveToFront(cacheItem);
+            cache.put(key, updatedNode);
         } else { // not in cache
             if (cache.size() == capacity) { // cache is full, remove expired LRU entries
                 removeExpiredEntries();
@@ -75,22 +77,22 @@ public class RedisCache {
                 removeLRU();
             }
             CacheItem newItem = new CacheItem(key, value);
-            cache.put(key, newItem);
-            lruList.addNode(newItem);
+            LRUQueue<CacheItem>.Node node = lruList.addNode(newItem);
+            cache.put(key, node);
         }
     }
 
     public void updateKeyIfPresent(String key, String value) {
-        CacheItem item = cache.get(key);
+        LRUQueue<CacheItem>.Node item = cache.get(key);
         if (item != null) {
-            item.val = value;
+            item.obj.val = value;
         }
     }
 
     // Return true if key is in cache and not expired, otherwise return false
     public boolean hasKey(String key) {
-        CacheItem cacheItem = cache.get(key);
-        return cacheItem != null && cacheItem.isValid(timeToExpire);
+        LRUQueue<CacheItem>.Node cacheItem = cache.get(key);
+        return cacheItem != null && cacheItem.obj != null && cacheItem.obj.isValid(timeToExpire);
     }
 
     public int size() {
@@ -103,7 +105,7 @@ public class RedisCache {
     }
 
     private void remove(CacheItem i) {
-        lruList.removeNode(i);
+        lruList.removeNode(cache.get(i.key));
         cache.remove(i.key);
     }
 

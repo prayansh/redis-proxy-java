@@ -66,15 +66,13 @@ public class RedisCacheTests {
         for (int i = 0; i < 10; i++) {
             testCache2.add("hello" + i, String.valueOf(i));
         }
-        Thread.sleep(800);
         assertNotNull(testCache2.retrieve("hello0"));
         assertNotNull(testCache2.retrieve("hello4"));
         testCache2.add("foo", "bar");
-        Thread.sleep(300);
         assertNotNull(testCache2.retrieve("hello0"));
         assertNotNull(testCache2.retrieve("hello4"));
-        assertNull(testCache2.retrieve("hello1"));
         assertNotNull(testCache2.retrieve("foo"));
+        assertNull(testCache2.retrieve("hello1"));
     }
 
     @Test

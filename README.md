@@ -26,7 +26,8 @@ Cache exposes 6 core functions
 - `flush()` - Clear all entries in the cache
 
 ## Algorithmic Complexity
-ignoring the web request overhead the `retrieve()` function has a best case runtime of `O(1)` and average runtime of `O(k)` where `k` is the read access time from the Redis instance. 
+The `retrieve()` function has a best case runtime of `O(1)` and worst case runtime of `O(k)` where `k` is the read access time from the Redis instance. Ignoring HTTP request overheads the REST API is sufficiently fast as long as the Redis Instance performs optimally. 
+Best case scenario is when the key is in the cache and not expired, worst case is when key is in cache but expired, requiring it to be removed (`O(1)`) and then added back to the cache (`O(1)`) after retrieving from Redis (`O(k)`).
 
 ## Time taken 
 - 2 hrs on Cache Implementation
@@ -35,7 +36,4 @@ ignoring the web request overhead the `retrieve()` function has a best case runt
 Learned a lot in the process, so didn't mind the time I took to learn Docker.
 
 # What I would do better
-I was a bit limited mostly due to time constraints. 
-I started off by creating my own `LRUDoublyLinkedList` implementation which has a private Node class, which was my own wrongdoing. I tried creating this class as its own entity and decoupled it from the `RedisCache` class so much that it will definitely impact performance.
-In hindsight my LinkedList implementation is a bit confusing since the delete function is doing two things at a time, i.e. search and delete (due to my design decision as discussed above). I could have made this better by storing the Node rather than the CacheItem in the Map thus allowing me to delete using a node rather than the node content, reducing the process of iterating over the cache to find the appropriate one. This would be the first change to this implementation, if given time.
-I would also like to support storage of data structures, rather than just plain Strings.
+I was a bit limited mostly due to time constraint. I would really like to implement storage of data structures, rather than just plain Strings, which should be trivial enough but require more detailed analysis and changes in the cache structure. I would also try to move away from using spring boot for serving the application since it has a lot of dependencies which bloats the application jar. 
