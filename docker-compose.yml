@@ -1,0 +1,14 @@
+version: "2"
+services:
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    links:
+      - redis
+  redis:
+    image: redis
+    container_name: cache
+    command: [ "redis-server", "--protected-mode", "no" ]
+    ports:
+      - "6379:6379"

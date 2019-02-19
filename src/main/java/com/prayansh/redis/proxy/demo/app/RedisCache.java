@@ -6,7 +6,7 @@ import java.util.Map;
 public class RedisCache {
 
     private class CacheItem {
-        long timeAdded;
+        long timeLastUsed;
         String key, val;
 
         public CacheItem(String key, String val) {
@@ -16,11 +16,11 @@ public class RedisCache {
         }
 
         public boolean isValid(long timeToExpire) {
-            return timeAdded + timeToExpire > System.currentTimeMillis();
+            return timeLastUsed + timeToExpire > System.currentTimeMillis();
         }
 
         public synchronized void reset() {
-            timeAdded = System.currentTimeMillis();
+            timeLastUsed = System.currentTimeMillis();
         }
 
         @Override
@@ -65,6 +65,7 @@ public class RedisCache {
         CacheItem cacheItem = cache.get(key);
         if (cacheItem != null) { // already in cache, update value
             cacheItem.val = value;
+            cacheItem.reset();
             lruList.moveToFront(cacheItem);
         } else { // not in cache
             if (cache.size() == capacity) { // cache is full, remove expired LRU entries

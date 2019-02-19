@@ -10,7 +10,7 @@ import java.util.concurrent.Executors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class TestRedisProxy {
+public class RedisProxyTests {
     private RedisProxy proxy;
 
     @BeforeEach
