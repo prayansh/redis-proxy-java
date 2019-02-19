@@ -1,0 +1,1 @@
+`-Dspring.config.location=<path-to-config-file>`
