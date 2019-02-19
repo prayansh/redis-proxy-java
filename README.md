@@ -4,7 +4,7 @@ additional features on top of Redis (e.g. caching).
 
 # Running code
 To run the tests 
-- `./mvnw test` (will run SpringBoot Tests) (Requires a redis instance to be running at localhost:6379)
+- `make test` (will run SpringBoot Tests) (Requires a redis instance to be running at localhost:6379)
 - Config variables can be changed in `src/main/resources/application.properties`
 
 To serve app using docker
